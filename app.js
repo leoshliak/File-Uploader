@@ -20,7 +20,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 const routes = require('./routes/index');
 app.use('/', routes);
-app.use('/auth', authRoutes);
+app.use('/', authRoutes);
 
 app.listen(4000, () => {
     console.log('Server is running on port 4000');

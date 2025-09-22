@@ -1,1 +1,23 @@
 <h1>Home Page</h1>
+<% if(locals.user) {%>
+<p>Welcome, <%= user.username %>!</p>
+<a href="/logout">Logout</a>
+    <% } else { %>
+    <div class="form-container">
+    <h1>Sign In</h1>
+    <form action="/login" method="POST">
+         <div class="input-group">
+    <label for="username">Username:</label>
+    <input id="username" name="username" placeholder="username" type="text" required />
+    </div>
+
+    <div class="input-group">
+    <label for="password">Password:</label>
+    <input id="password" name="password" type="password" required/>
+    </div>
+    <button type="submit">Submit</button>
+    </form>
+
+    <a href="/sign-up">Sign Up</a>
+</div>
+        <% } %>

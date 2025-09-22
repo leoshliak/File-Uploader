@@ -6,5 +6,9 @@ function renderWithLayout(res, view, options = {}) {
 }
 
 exports.getHomePage = (req, res) => {
-    renderWithLayout(res, 'pages/home', {title: 'Home Page'});
+    renderWithLayout(res, 'pages/home', {title: 'Home Page', user: req.user});
+}
+
+exports.getRegisterPage = (req, res) => {
+renderWithLayout(res, 'pages/sign-up', {title: 'Register'});
 }

@@ -6,14 +6,14 @@ const prisma = new PrismaClient();
 
 function initialize(passport) {
   passport.use(
-    new LocalStrategy({ usernameField: "email" }, async (email, password, done) => {
+    new LocalStrategy({ usernameField: "username" }, async (username, password, done) => {
       try {
         const user = await prisma.user.findUnique({
-          where: { email },
+          where: { username },
         });
 
         if (!user) {
-          return done(null, false, { message: "No user with that email" });
+          return done(null, false, { message: "No user with that usernmae" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);

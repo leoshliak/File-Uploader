@@ -1,3 +1,8 @@
 <header>
     <h1>Drive</h1>
+    <%if(locals.user) { %> 
+        <a href="/logout">Logout</a>
+        <% } else { %>
+        <a href="/sign-up">Sign Up</a>
+            <% } %>
 </header>
