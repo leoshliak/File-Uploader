@@ -20,7 +20,23 @@ model User {
   username     String?  @unique
   password String
   files    File[]
+  folders  Folder[]
   sessions Session[]
+}
+
+model Folder {
+  id          Int      @id @default(autoincrement())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  parentId    Int?
+  parent      Folder?  @relation("FolderHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  subfolders  Folder[] @relation("FolderHierarchy")
+  files       File[]
+
+  @@unique([name, userId, parentId])
 }
 
 model File {
@@ -28,8 +44,15 @@ model File {
   filename   String
   url        String   @unique
   uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  size       Int
+  mimeType   String
   userId     Int
   user       User     @relation(fields: [userId], references: [id])
+  folderId   Int?
+  folder     Folder?  @relation(fields: [folderId], references: [id])
+
+  @@unique([filename, folderId, userId])
 }
 
 model Session {

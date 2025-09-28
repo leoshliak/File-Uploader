@@ -1,6 +1,12 @@
 <h1>Home Page</h1>
 <% if(locals.user) {%>
+<div class="side">
+<button>New Folder</button>
+<button>Upload File</button>
+</div>
+<div class="home-container">
 <p>Welcome, <%= user.username %>!</p>
+
 <a href="/logout">Logout</a>
     <% } else { %>
     <div class="form-container">
