@@ -14,7 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.16.3",
     "@prisma/extension-optimize": "^2.0.0",
     "@quixo3/prisma-session-store": "^3.1.13",
     "bcrypt": "^6.0.0",

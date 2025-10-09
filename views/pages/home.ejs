@@ -1,29 +1,84 @@
-<h1>Home Page</h1>
-<% if(locals.user) {%>
-<div class="side">
-<button>New Folder</button>
-<button>Upload File</button>
-</div>
-<div class="home-container">
-<p>Welcome, <%= user.username %>!</p>
+<h1><%= title %></h1>
 
-<a href="/logout">Logout</a>
-    <% } else { %>
-    <div class="form-container">
+<% if(locals.user) { %>
+  <div class="side">
+    <form action="/newFolderHome" method="POST" class="folder-form">
+      <div class="input-group">
+        <label for="name">Folder Name:</label>
+        <input id="name" name="name" placeholder="New Folder" type="text" required />
+      </div>
+      <button type="submit">Create Folder</button>
+    </form>
+    <form action="/newFileHome" method="POST" class="file-form" enctype="multipart/form-data">
+      <div class="input-group">
+        <label for="file">Select File:</label>
+        <input id="file" name="file" type="file" required accept="image/*,video/*,application/pdf,.txt,.docx,.zip" />
+      </div>
+      <button type="submit">Upload File</button>
+    </form>
+  </div>
+  
+  <div class="home-container">
+    <p>Welcome, <%= user.username %>!</p>
+
+    <% if (locals.folders && folders.length > 0) { %>
+      <div class="folders-section">
+        <h2>Folders</h2>
+        <div class="folders-grid">
+          <% folders.forEach(folder => { %>
+            <div class="folder-item">
+              <i class="fas fa-folder"></i>
+              <span><%= folder.name %></span>
+              <small>
+                <%= folder.files ? folder.files.length : 0 %> files
+                <%= folder.subfolders ? folder.subfolders.length : 0 %> subfolders
+                created at <%= new Date(folder.createdAt).toLocaleDateString() %>
+              </small>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (locals.files && files.length > 0) { %>
+      <div class="files-section">
+        <h2>Files</h2>
+        <div class="files-grid">
+          <% files.forEach(file => { %>
+            <div class="file-item">
+              <i class="fas fa-file"></i>
+              <span><%= file.filename %></span>
+              <small>
+                Uploaded: <%= new Date(file.uploadedAt).toLocaleDateString() %>
+              </small>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+
+    <% if ((!locals.folders || folders.length === 0) && (!locals.files || files.length === 0)) { %>
+      <p class="empty-state">No files or folders yet. Start by creating a folder or uploading a file!</p>
+    <% } %>
+
+    <a href="/logout" class="logout-btn">Logout</a>
+  </div>
+<% } else { %>
+  <div class="form-container">
     <h1>Sign In</h1>
     <form action="/login" method="POST">
-         <div class="input-group">
-    <label for="username">Username:</label>
-    <input id="username" name="username" placeholder="username" type="text" required />
-    </div>
+      <div class="input-group">
+        <label for="email">Email:</label>
+        <input id="email" name="email" type="email" required />
+      </div>
 
-    <div class="input-group">
-    <label for="password">Password:</label>
-    <input id="password" name="password" type="password" required/>
-    </div>
-    <button type="submit">Submit</button>
+      <div class="input-group">
+        <label for="password">Password:</label>
+        <input id="password" name="password" type="password" required/>
+      </div>
+      <button type="submit">Sign In</button>
     </form>
 
-    <a href="/sign-up">Sign Up</a>
-</div>
-        <% } %>
+    <a href="/sign-up" class="register-link">Sign Up</a>
+  </div>
+<% } %>

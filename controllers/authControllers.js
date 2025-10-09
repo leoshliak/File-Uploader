@@ -4,17 +4,38 @@ const bcrypt = require("bcrypt");
 const prisma = new PrismaClient();
 
 exports.register = async (req, res) => {
-  const { email, username, password } = req.body;
-  const hashed = await bcrypt.hash(password, 10);
-
   try {
+    const { email, username, password } = req.body;
+    
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
     const user = await prisma.user.create({
-      data: { email, username, password: hashed },
+      data: { 
+        email, 
+        username: username || email.split('@')[0], // Use part of email as username if not provided
+        password: hashed 
+      },
     });
-    res.redirect('/');
-    res.json({ message: "User created", user });
+
+    // Log the user in after registration
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error("Auto-login error:", err);
+        return res.redirect('/');
+      }
+      res.redirect('/');
+    });
   } catch (err) {
-    res.status(400).json({ error: "Email already exists" });
+    console.error("Registration error:", err);
+    if (err.code === 'P2002') {
+      return res.status(400).json({ error: "Email or username already exists" });
+    }
+    res.status(500).json({ error: "Registration failed" });
   }
 };
 
