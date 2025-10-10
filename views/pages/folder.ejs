@@ -1,0 +1,53 @@
+<div class="folder-con">
+    <h1>Folder: <%= folder.name %></h1>
+
+    <form action="/folder/<%= folder.id %>/newFolder" method="POST" class="folder-form">
+      <div class="input-group">
+        <label for="name">New Subfolder Name:</label>
+        <input id="name" name="name" type="text" required />
+      </div>
+      <button type="submit">Create Subfolder</button>
+    </form>
+
+    <form action="/folder/<%= folder.id %>/newFile" method="POST" class="file-form" enctype="multipart/form-data">
+      <div class="input-group">
+        <label for="file">Select File:</label>
+        <input id="file" name="file" type="file" required accept="image/*,video/*,application/pdf,.txt,.docx,.zip" />
+      </div>
+      <button type="submit">Upload File</button>
+    </form>
+
+    <% if (locals.subfolders && subfolders.length > 0) { %>
+      <div class="subfolders-section">
+        <h2>Subfolders</h2>
+        <div class="subfolders-grid">
+          <% subfolders.forEach(subfolder => { %>
+            <a href="/folder/<%= subfolder.id  %>" class="folder-item">
+              <i class="fas fa-folder"></i>
+              <span><%= subfolder.name %></span>
+              <small>
+                <%= subfolder.files ? subfolder.files.length : 0 %> files
+                <%= subfolder.subfolders ? subfolder.subfolders.length : 0 %> subfolders
+                created at <%= new Date(subfolder.createdAt).toLocaleDateString() %>
+              </small>
+            </a>
+          <% })} %>
+
+          <% if(locals.files && locals.files.length > 0) {%>
+            <div class="files-section">
+            <h2>Files</h2>
+            <div class="files-grid">
+            <% files.forEach(file => { %>
+              <div class="file-item">
+                <i class="fas fa-file"></i>
+                <span><%= file.filename %></span>
+                <small>
+                  Uploaded: <%= new Date(file.uploadedAt).toLocaleDateString() %>
+                </small>
+              </div>
+            <% }) %>
+            </div>
+            </div>
+            <% } %>
+        </div>
+</div>

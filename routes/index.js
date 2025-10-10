@@ -5,6 +5,9 @@ const controllers = require('../controllers/controllers');
 router.get('/', controllers.getHomePage);
 router.post('/newFolderHome', controllers.createFolderFromHome);
 router.post('/newFileHome', controllers.createFileFromHome);
+router.get('/folder/:id', controllers.getFolderPage);
+router.post('/folder/:id/newFolder', controllers.createFolderInFolder);
+router.post('/folder/:id/newFile', controllers.createFileInFolder);
 
 // Error handling for file uploads
 router.use((err, req, res, next) => {

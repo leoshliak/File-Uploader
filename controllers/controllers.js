@@ -161,3 +161,157 @@ exports.createFileFromHome = [
     }
   }
 ];
+
+exports.getFolderPage = async (req, res) => {
+  try {
+    const folderId = parseInt(req.params.id, 10);
+    if (isNaN(folderId)) {
+      return res.status(400).send('Invalid folder ID');
+    }
+   
+    const subfolders = await prisma.folder.findMany({
+      where: {
+        parentId: folderId,
+        userId: req.user ? req.user.id : null
+      }
+      , 
+      include: {
+        user: true,
+        parent: true,
+      }
+    })
+
+    const files = await prisma.file.findMany({
+      where: {
+        folderId: folderId,
+        userId: req.user ? req.user.id : null
+      },
+      include: {
+        user: true,
+        folder: true,
+      }
+
+  });
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId },
+      include: {
+        user: true,
+        parent: true,
+      }
+    });
+
+    renderWithLayout(res, 'pages/folder', {
+      title: folder ? folder.name : 'Folder',
+      user: req.user || null,
+      folder,
+      files: files || [],
+      subfolders: subfolders || []
+    })
+  } catch (err) {
+    console.error('Get folder page error:', err);
+    res.status(500).send('Server Error');
+  }
+}
+
+exports.createFolderInFolder = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Not logged in" });
+    }
+
+    const parentId = parseInt(req.params.id, 10);
+    if (isNaN(parentId)) {
+      return res.status(400).json({ message: "Invalid parent folder ID" });
+    }
+
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Folder name is required" });
+    }
+
+    // Check if parent folder exists and belongs to user
+    const parentFolder = await prisma.folder.findUnique({
+      where: { id: parentId }
+    });
+
+    if (!parentFolder) {
+      return res.status(404).json({ message: "Parent folder not found" });
+    }
+
+    if (parentFolder.userId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to add to this folder" });
+    }
+
+    const folder = await prisma.folder.create({
+      data: {
+        name: name.trim(),
+        userId: req.user.id,
+        parentId: parentId
+      }
+    });
+
+    // Redirect back to the parent folder page
+    res.redirect(`/folder/${parentId}`);
+  } catch (err) {
+    console.error('Create folder in folder error:', err);
+    if (err.code === 'P2002') {
+      return res.status(400).json({ message: "A folder with this name already exists in this location" });
+    }
+    res.status(500).json({ message: "Error creating folder" });
+  }
+}
+
+exports.createFileInFolder = [
+  upload.single('file'),
+  async (req, res) => {
+    try {
+      const parentId = parseInt(req.params.id, 10);
+      if (isNaN(parentId)) {
+        return res.status(400).json({ message: "Invalid folder ID" });
+      }
+
+      const parentFolder = await prisma.folder.findUnique({
+        where: { id: parentId }
+      })
+
+      if (!parentFolder) {
+        return res.status(404).json({ message: "Parent folder not found" });
+      }
+
+      if (!req.user || parentFolder.userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to add files to this folder" });
+      }
+
+      const { file } = req;
+
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+    
+      if (!file.path) {
+        throw new Error('No URL received from Cloudinary');
+      }
+
+      const newFile = await prisma.file.create({
+        data: {
+          filename: file.originalname,
+          url: file.path, 
+          size: file.size,
+          mimeType: file.mimetype,
+          userId: req.user.id,
+          folderId: parentId,
+          uploadedAt: new Date(),
+          updatedAt: new Date(),
+        }
+      })
+
+      console.log('Created file:', newFile);
+
+      res.redirect(`/folder/${parentId}`);
+
+    } catch (err) {
+      console.error('Create file in folder error:', err);
+      res.status(500).json({ message: "Error saving file information" });
+    }
+  }
+]

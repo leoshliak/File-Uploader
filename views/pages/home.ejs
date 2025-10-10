@@ -26,7 +26,7 @@
         <h2>Folders</h2>
         <div class="folders-grid">
           <% folders.forEach(folder => { %>
-            <div class="folder-item">
+            <a href="/folder/<%= folder.id  %>" class="folder-item">
               <i class="fas fa-folder"></i>
               <span><%= folder.name %></span>
               <small>
@@ -34,7 +34,7 @@
                 <%= folder.subfolders ? folder.subfolders.length : 0 %> subfolders
                 created at <%= new Date(folder.createdAt).toLocaleDateString() %>
               </small>
-            </div>
+            </a>
           <% }) %>
         </div>
       </div>
