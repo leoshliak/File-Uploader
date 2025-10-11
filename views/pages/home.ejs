@@ -34,6 +34,19 @@
                 <%= folder.subfolders ? folder.subfolders.length : 0 %> subfolders
                 created at <%= new Date(folder.createdAt).toLocaleDateString() %>
               </small>
+              <button class="rename">Rename</button>
+              <div class="rename-for" style="display: none;">
+                <form action="/folder/<%= folder.id %>/rename" method="POST" class="rename-form">
+                  <div class="input-group">
+                    <input name="name" type="text" value="<%= folder.name %>" required />
+                  </div>
+                  <button type="submit"  class="save-folder-change">Save</button>
+                  <button type="button" class="cancel-rename">Cancel</button>
+                </form>
+              </div>
+              <form action="/folder/<%= folder.id %>/delete" class="delete-folder" method="POST">
+                <button type="submit">Delete</button>
+              </form>
             </a>
           <% }) %>
         </div>
@@ -82,3 +95,71 @@
     <a href="/sign-up" class="register-link">Sign Up</a>
   </div>
 <% } %>
+
+<script>
+
+  const renameButtons = document.querySelectorAll('.rename');
+  const cancelButtons = document.querySelectorAll('.cancel-rename');
+  const saveButtons = document.querySelectorAll('.save-folder-change');
+
+  renameButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const renameForm = button.nextElementSibling;
+      renameForm.style.display = 'block';
+      button.style.display = 'none';
+    });
+  });
+
+  cancelButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const renameForm = button.closest('.rename-for');
+      renameForm.style.display = 'none';
+      const renameButton = renameForm.previousElementSibling;
+      renameButton.style.display = 'inline-block';
+    });
+  });
+
+  saveButtons.forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const form = button.closest('form');
+      if (form) {
+        form.submit();
+      }
+    });
+  });
+
+  document.querySelectorAll('.delete-folder button').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const form = button.closest('form');
+      const folderItem = form.closest('.folder-item');
+      const folderName = folderItem.querySelector('span').textContent;
+      const filesCount = parseInt(folderItem.querySelector('small').textContent.match(/(\d+) files/)[1]);
+      const subfoldersCount = parseInt(folderItem.querySelector('small').textContent.match(/(\d+) subfolders/)[1]);
+      
+      let message = `Are you sure you want to delete the folder "${folderName}"?`;
+      if (filesCount > 0 || subfoldersCount > 0) {
+        message += `\nThis folder contains ${filesCount} files and ${subfoldersCount} subfolders. All contents will be permanently deleted!`;
+      }
+      
+      if (confirm(message)) {
+        form.submit();
+      }
+    });
+  });
+
+  document.querySelectorAll('.folder-item').forEach(folderItem => {
+    folderItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (e.target.tagName.toLowerCase() === 'button' || e.target.closest('.rename-for') || e.target.closest('.delete-folder')) {
+        return;
+      }
+      window.location.href = folderItem.href;
+    });
+  });
+  </script>

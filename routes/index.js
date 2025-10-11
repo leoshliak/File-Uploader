@@ -8,6 +8,8 @@ router.post('/newFileHome', controllers.createFileFromHome);
 router.get('/folder/:id', controllers.getFolderPage);
 router.post('/folder/:id/newFolder', controllers.createFolderInFolder);
 router.post('/folder/:id/newFile', controllers.createFileInFolder);
+router.post('/folder/:id/rename', controllers.renameFolder);
+router.post('/folder/:id/delete', controllers.deleteFolder);
 
 // Error handling for file uploads
 router.use((err, req, res, next) => {

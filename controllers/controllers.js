@@ -315,3 +315,94 @@ exports.createFileInFolder = [
     }
   }
 ]
+
+exports.deleteFolder = async (req, res) => {
+  try {
+    const folderId = parseInt(req.params.id, 10);
+    if (isNaN(folderId)) {
+      return res.status(400).json({ message: "Invalid folder ID" });
+    }
+
+    // Check if folder exists and belongs to user
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId },
+      include: {
+        files: true,
+        subfolders: true
+      }
+    });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    if (folder.userId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this folder" });
+    }
+
+    // Recursive function to delete folder contents
+    async function deletefolderContents(folderId) {
+      // Get all subfolders
+      const subfolders = await prisma.folder.findMany({
+        where: { parentId: folderId },
+        include: { files: true, subfolders: true }
+      });
+
+      // Recursively delete contents of each subfolder
+      for (const subfolder of subfolders) {
+        await deletefolderContents(subfolder.id);
+      }
+
+      // Delete all files in this folder
+      await prisma.file.deleteMany({
+        where: { folderId: folderId }
+      });
+
+      // Delete the folder itself
+      await prisma.folder.delete({
+        where: { id: folderId }
+      });
+    }
+
+    // Start the recursive deletion
+    await deletefolderContents(folderId);
+
+    // Redirect back to the parent folder or home
+    res.redirect(folder.parentId ? `/folder/${folder.parentId}` : '/');
+  } catch (err) {
+    console.error('Delete folder error:', err);
+    res.status(500).json({ message: "Error deleting folder" });
+  }
+};
+
+exports.renameFolder = async (req, res) => {
+  try {
+    const folderId = parseInt(req.params.id, 10);
+    if (isNaN(folderId)) {
+      return res.status(400).json({ message: "Invalid folder ID" });
+    }
+
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Folder name is required"});
+    } 
+
+    const folder = await prisma.folder.findUnique({
+      where: { id: folderId }
+    });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    const updateFolder = await prisma.folder.update({
+      where: { id: folderId },
+      data: { name: name.trim() },
+    })
+   
+    res.redirect(folder.parentId ? `/folder/${folder.parentId}` : '/');
+  } catch (err) {
+    console.error('Rename folder error:', err);
+    res.status(500).json({ message: "Error renaming folder" });
+  }
+}
