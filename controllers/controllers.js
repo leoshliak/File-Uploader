@@ -1,6 +1,7 @@
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const upload = require('./multer');
+const axios = require('axios');
 
 function renderWithLayout(res, view, options = {}) {
   res.render(view, options, (err, html) => {
@@ -404,5 +405,80 @@ exports.renameFolder = async (req, res) => {
   } catch (err) {
     console.error('Rename folder error:', err);
     res.status(500).json({ message: "Error renaming folder" });
+  }
+}
+
+exports.deleteFile = async (req, res) => {
+  
+
+  try {
+    const fileId = parseInt(req.params.id, 10);
+      if (isNaN(fileId)) {
+        return res.status(400).json({ message: "Invalid file ID" });
+      }
+
+      const file = await prisma.file.findUnique({
+        where: { id: fileId },
+      })
+
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      const parentId = file.folderId;
+
+      const deleteFile = await prisma.file.delete({
+        where: { id: fileId }
+      });
+
+      res.redirect(parentId ? `/folder/${parentId}` : '/');
+  } catch (err) {
+    console.error('Delete file error:', err);
+    res.status(500).json({ message: "Error deleting file" });
+  }
+}
+
+exports.downloadFile = async (req, res) => {
+  try {
+    const fileId = parseInt(req.params.id, 10);
+    if (isNaN(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID" });
+    }
+
+    const file = await prisma.file.findUnique({
+      where: { id: fileId },
+    });
+
+    if (!file) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // Check if user has permission to download
+    if (!req.user || file.userId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to download this file" });
+    }
+
+    try {
+      // Fetch the file from Cloudinary
+      const response = await axios({
+        method: 'GET',
+        url: file.url,
+        responseType: 'stream'
+      });
+
+      // Set headers for force download
+      res.setHeader('Content-Type', file.mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+      res.setHeader('Content-Length', response.headers['content-length']);
+
+      // Pipe the file stream to the response
+      response.data.pipe(res);
+    } catch (error) {
+      console.error('Error downloading from Cloudinary:', error);
+      res.status(500).json({ message: "Error downloading file" });
+    }
+  } catch (err) {
+    console.error('Download file error:', err);
+    res.status(500).json({ message: "Error downloading file" });
   }
 }
