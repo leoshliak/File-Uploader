@@ -1,23 +1,199 @@
 <div class="form-container">
     <h1>Sign Up</h1>
-    <form action="/sign-up" method="POST">
-         <div class="input-group">
-    <label for="username">Username:</label>
-    <input id="username" name="username" placeholder="username" type="text" required />
-    </div>
+    <form action="/sign-up" method="POST" id="signupForm">
+        <div class="input-group">
+            <label for="username">Username:</label>
+            <input id="username" name="username" placeholder="username" type="text" required 
+                   pattern="[a-zA-Z0-9_]+" title="Username can only contain letters, numbers and underscores"/>
+            <small class="input-help">Username must be at least 3 characters long and can only contain letters, numbers and underscores</small>
+        </div>
 
-    <div class="input-group">
-    <label for="email">Email:</label>
-    <input id="email" name="email" placeholder="" type="email" required />
-    </div>
-    <div class="input-group">
-    <label for="password">Password:</label>
-    <input id="password" name="password" type="password" required/>
-    </div>
-    <div class="input-group">
-    <label for="password">Confirm Password:</label>
-    <input id="confirm-password" name="confirm-password" type="password" required />
-    </div>
-    <button type="submit">Submit</button>
+        <div class="input-group">
+            <label for="email">Email:</label>
+            <input id="email" name="email" placeholder="your@email.com" type="email" required />
+        </div>
+        <div class="input-group">
+            <label for="password">Password:</label>
+            <input id="password" name="password" type="password" required/>
+            <small class="password-requirements">
+                Password requirements:
+                <ul>
+                    <li id="length-check">✗ At least 8 characters long</li>
+                    <li id="uppercase-check">✗ At least one uppercase letter</li>
+                    <li id="lowercase-check">✗ At least one lowercase letter</li>
+                    <li id="number-check">✗ At least one number</li>
+                    <li id="special-check">✗ At least one special character (!@#$%^&*)</li>
+                </ul>
+            </small>
+        </div>
+        <div class="input-group">
+            <label for="confirm-password">Confirm Password:</label>
+            <input id="confirm-password" name="confirm-password" type="password" required />
+            <small id="password-match" class="input-help"></small>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+        <button type="submit">Submit</button>
     </form>
 </div>
+
+<style>
+.form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.input-help, .password-requirements {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+    display: block;
+}
+
+.password-requirements ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.error-message {
+    color: #d32f2f;
+    background-color: #fde7e7;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.valid-check {
+    color: #4caf50;
+}
+
+.invalid-check {
+    color: #f44336;
+}
+
+button[type="submit"] {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049;
+}
+</style>
+
+<script>
+const password = document.getElementById('password');
+const confirmPassword = document.getElementById('confirm-password');
+const form = document.getElementById('signupForm');
+
+function updatePasswordChecks(password) {
+    const checks = {
+        'length-check': password.length >= 8,
+        'uppercase-check': /[A-Z]/.test(password),
+        'lowercase-check': /[a-z]/.test(password),
+        'number-check': /[0-9]/.test(password),
+        'special-check': /[!@#$%^&*]/.test(password)
+    };
+
+    Object.entries(checks).forEach(([id, valid]) => {
+        const element = document.getElementById(id);
+        element.innerHTML = `${valid ? '✓' : '✗'} ${element.innerHTML.slice(2)}`;
+        element.className = valid ? 'valid-check' : 'invalid-check';
+    });
+}
+
+password.addEventListener('input', (e) => {
+    updatePasswordChecks(e.target.value);
+});
+
+confirmPassword.addEventListener('input', (e) => {
+    const matchElement = document.getElementById('password-match');
+    if (password.value === e.target.value) {
+        matchElement.textContent = '✓ Passwords match';
+        matchElement.className = 'input-help valid-check';
+    } else {
+        matchElement.textContent = '✗ Passwords do not match';
+        matchElement.className = 'input-help invalid-check';
+    }
+});
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const response = await fetch('/sign-up', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(Object.fromEntries(formData)),
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.style.display = 'block';
+        
+        if (result.details && Array.isArray(result.details)) {
+            errorDiv.innerHTML = result.details.map(error => `<div>• ${error}</div>`).join('');
+        } else {
+            errorDiv.textContent = result.error || 'An error occurred during registration';
+        }
+    } else {
+        window.location.href = '/';
+    }
+});
+</script>
+
+<script>
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const response = await fetch('/sign-up', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(Object.fromEntries(formData)),
+    });
+
+    const result = await response.json();
+    
+    if (!response.ok) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.style.display = 'block';
+        
+        if (result.details && Array.isArray(result.details)) {
+            errorDiv.innerHTML = result.details.map(error => `<div>• ${error}</div>`).join('');
+        } else {
+            errorDiv.textContent = result.error || 'An error occurred during registration';
+        }
+    } else {
+        // Successful registration, redirect to home
+        window.location.href = '/';
+    }
+});
+</script>

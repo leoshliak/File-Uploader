@@ -2,10 +2,11 @@ const express = require("express");
 const passport = require("passport");
 const authController = require("../controllers/authControllers");
 const { getRegisterPage } = require("../controllers/controllers");
+const { validateRegistration } = require("../middleware/validators");
 
 const router = express.Router();
 
-router.post("/sign-up", authController.register);
+router.post("/sign-up", validateRegistration, authController.register);
 router.post("/login", (req, res, next) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {

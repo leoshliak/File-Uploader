@@ -3,22 +3,7 @@ const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const upload = require('./multer');
 const axios = require('axios');
-
-function renderWithLayout(res, view, options = {}) {
-  res.render(view, options, (err, html) => {
-    if (err) {
-      console.error('View render error:', err);
-      return res.status(500).send('Error rendering view');
-    }
-    res.render('layout', { ...options, body: html }, (err, html) => {
-      if (err) {
-        console.error('Layout render error:', err);
-        return res.status(500).send('Error rendering layout');
-      }
-      res.send(html);
-    });
-  });
-}
+const { renderWithLayout } = require('../middleware/renderWithLayout');
 
 exports.getHomePage = async (req, res) => {
   try {

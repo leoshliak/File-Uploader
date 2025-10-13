@@ -1,16 +1,21 @@
 const { PrismaClient } = require("../generated/prisma");
 const bcrypt = require("bcrypt");
+const { validationResult } = require('express-validator');
 
 const prisma = new PrismaClient();
 
 exports.register = async (req, res) => {
   try {
-    const { email, username, password } = req.body;
-    
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: errors.array().map(err => err.msg)
+      });
     }
+
+    const { email, username, password } = req.body;
 
     const hashed = await bcrypt.hash(password, 10);
 
