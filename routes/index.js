@@ -12,6 +12,7 @@ router.post('/folder/:id/rename', controllers.renameFolder);
 router.post('/folder/:id/delete', controllers.deleteFolder);
 router.post('/file/:id/delete', controllers.deleteFile);
 router.get('/file/:id/download', controllers.downloadFile);
+router.post('/file/:id/rename', controllers.renameFile);
 
 // Error handling for file uploads
 router.use((err, req, res, next) => {

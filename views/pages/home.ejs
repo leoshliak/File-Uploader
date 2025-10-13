@@ -70,6 +70,16 @@
               <a href="/file/<%= file.id %>/download" class="download-link" download>
                 <button type="button">Download</button>
               </a>
+              <button class="rename">Rename</button>
+              <div class="rename-for" style="display: none;">
+                <form action="/file/<%= file.id %>/rename" method="POST" class="rename-form">
+                  <div class="input-group">
+                    <input name="name" type="text" value="<%= file.filename.split('.')[0] %>" required />
+                  </div>
+                  <button type="submit"  class="save-folder-change">Save</button>
+                  <button type="button" class="cancel-rename">Cancel</button>
+                </form>
+              </div>
             </div>
           <% }) %>
         </div>

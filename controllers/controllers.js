@@ -1,3 +1,4 @@
+const { rename } = require('fs');
 const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 const upload = require('./multer');
@@ -480,5 +481,49 @@ exports.downloadFile = async (req, res) => {
   } catch (err) {
     console.error('Download file error:', err);
     res.status(500).json({ message: "Error downloading file" });
+  }
+}
+
+exports.renameFile = async (req, res) => {
+  try {
+    const fileId = parseInt(req.params.id, 10);
+    if (isNaN(fileId)) {
+      return res.status(400).json({ message: "Invalid file ID" });
+    }
+
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "File name is required" });
+    }
+
+    const file = await prisma.file.findUnique({
+      where: { id: fileId }
+    });
+
+    if (!file) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // Get the original file extension
+    const originalExtension = file.filename.split('.').pop();
+    
+    // Get the new name without any extension user might have added
+    let newName = name.trim();
+    if (newName.includes('.')) {
+      newName = newName.split('.')[0];
+    }
+
+    // Add back the original extension
+    const finalName = `${newName}.${originalExtension}`;
+
+    const updateFile = await prisma.file.update({
+      where: { id: fileId },
+      data: { filename: finalName },
+    })
+
+    res.redirect(file.folderId ? `/folder/${file.folderId}` : '/');
+  } catch (err) {
+    console.error('Rename file error:', err);
+    res.status(500).json({ message: "Error renaming file" });
   }
 }
